@@ -13,7 +13,7 @@ struct ContentView: View {
     @State private var urlText = "https://m.youtube.com"
     @State private var loadedURL: URL? = URL(string: "https://m.youtube.com")
     @State private var videoWidth: Double = 1090
-    @State private var videoHeight: Double = 680
+    @State private var videoHeight: Double = 690
     @State private var objectFit: String = "contain"
     @State private var resizeTrigger = 0
 
@@ -315,6 +315,16 @@ struct BrowserWebView: UIViewRepresentable {
                             max-width: ${targetWidth} !important;
                             max-height: ${targetHeight} !important;
                         }
+                        #masthead {
+                            opacity: 0.1 !important;
+                        }
+                        ytd-masthead,
+                        ytm-masthead-container,
+                        #header-bar,
+                        ytm-mobile-topbar-renderer,
+                        .mobile-topbar-header {
+                            opacity: 0.1 !important;
+                        }
                         #movie_player,
                         #movie_player .html5-video-player,
                         #movie_player .html5-video-container {
@@ -344,6 +354,25 @@ struct BrowserWebView: UIViewRepresentable {
                     if (style) {
                         style.textContent = css;
                     }
+                }
+
+                function applyMastheadOpacity(doc) {
+                    if (!doc) { return; }
+
+                    const selectors = [
+                        '#masthead',
+                        'ytd-masthead',
+                        'ytm-masthead-container',
+                        '#header-bar',
+                        'ytm-mobile-topbar-renderer',
+                        '.mobile-topbar-header'
+                    ];
+
+                    selectors.forEach(function(selector) {
+                        doc.querySelectorAll(selector).forEach(function(el) {
+                            el.style.setProperty('opacity', '0.1', 'important');
+                        });
+                    });
                 }
 
                 function styleVideo(video) {
@@ -414,6 +443,7 @@ struct BrowserWebView: UIViewRepresentable {
                 function walkDocument(doc) {
                     if (!doc) { return; }
                     ensureGlobalStyle(doc);
+                    applyMastheadOpacity(doc);
                     doc.querySelectorAll('video').forEach(styleVideo);
                     doc.querySelectorAll('iframe').forEach(function(iframe) {
                         styleIframe(iframe);
