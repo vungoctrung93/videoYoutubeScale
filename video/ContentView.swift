@@ -12,29 +12,51 @@ import UIKit
 struct ContentView: View {
     @State private var urlText = "https://m.youtube.com"
     @State private var loadedURL: URL? = URL(string: "https://m.youtube.com")
-    @State private var videoWidth: Double = 1090
-    @State private var videoHeight: Double = 690
     @State private var objectFit: String = "contain"
     @State private var resizeTrigger = 0
+    @State private var statusBarHeight: CGFloat = 0
 
     var body: some View {
-        VStack(spacing: 0) {
-            BrowserWebView(
-                url: $loadedURL,
-                videoWidth: Int(videoWidth),
-                videoHeight: Int(videoHeight),
-                objectFit: objectFit,
-                resizeTrigger: resizeTrigger
-            )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .clipShape(RoundedRectangle(cornerRadius: 0))
-            
-            
+        GeometryReader { proxy in
+            let screenWidth = max(proxy.size.width, 0)
+            let computedVideoWidth = max(screenWidth - 32, 1)
+            let computedVideoHeight = max((screenWidth * 2.0 / 3.0) - 32, 1)
 
-
-
+            VStack(spacing: 0) {
+                BrowserWebView(
+                    url: $loadedURL,
+                    videoWidth: Int(computedVideoWidth.rounded()),
+                    videoHeight: Int(computedVideoHeight.rounded()),
+                    objectFit: objectFit,
+                    resizeTrigger: resizeTrigger
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: 0))
+            }
+            .padding()
+            .onAppear(perform: updateStatusBarHeight)
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+                updateStatusBarHeight()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
+                updateStatusBarHeight()
+            }
         }
-        .padding()
+        .statusBar(hidden: shouldHideStatusBar)
+        .ignoresSafeArea(.container, edges: shouldHideStatusBar ? .top : [])
+    }
+
+    private var shouldHideStatusBar: Bool {
+        statusBarHeight >= 32
+    }
+
+    private func updateStatusBarHeight() {
+        let currentHeight = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .compactMap { $0.statusBarManager?.statusBarFrame.height }
+            .max() ?? 0
+
+        statusBarHeight = currentHeight
     }
     
 
